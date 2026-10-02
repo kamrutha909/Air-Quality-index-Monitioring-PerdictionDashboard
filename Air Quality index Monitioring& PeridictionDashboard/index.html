@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Index Monitoring &amp; Prediction Dashboard</title>
+    
+    <!-- Meta SEO & Description -->
+    <meta name="description" content="A modern, beginner-friendly web application for real-time Air Quality Index (AQI) telemetry monitoring, pollutant analysis, and machine learning based future AQI forecasting.">
+    <meta name="keywords" content="Air Quality Index, AQI Dashboard, AQI Prediction, PM2.5, PM10, Machine Learning, Environmental Telemetry">
+    <meta name="author" content="B.Tech Final Year Engineering Project">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Font Awesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Chart.js 4.4 CDN for Fast & Responsive Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- ==========================================================================
+             Header & Navigation
+             ========================================================================== -->
+        <header class="site-header">
+            <div class="header-inner">
+                
+                <!-- Brand Title -->
+                <div class="brand-section">
+                    <div class="brand-icon-wrapper">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1>Air Quality Index Monitoring &amp; Prediction Dashboard</h1>
+                        <span class="brand-tagline">Real-Time Ambient Telemetry &bull; CPCB Scale (0–500) &bull; ML Forecasting</span>
+                    </div>
+                </div>
+
+                <!-- Location Selector & Mode Controls -->
+                <div class="header-controls">
+                    <!-- Location Selector -->
+                    <div class="location-select-box" title="Select City">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <select id="citySelect" class="custom-select" aria-label="Select Monitored City">
+                            <option value="Kakinada" selected>Kakinada (AP)</option>
+                            <option value="Hyderabad">Hyderabad (TS)</option>
+                            <option value="Vijayawada">Vijayawada (AP)</option>
+                            <option value="Visakhapatnam">Visakhapatnam (AP)</option>
+                            <option value="Chennai">Chennai (TN)</option>
+                            <option value="Bengaluru">Bengaluru (KA)</option>
+                            <option value="Delhi">Delhi (NCR)</option>
+                            <option value="Mumbai">Mumbai (MH)</option>
+                        </select>
+                    </div>
+
+                    <!-- Live Simulation Toggle -->
+                    <div class="sim-mode-toggle" id="liveSimToggle" title="Toggle Live Sensor Telemetry Simulation">
+                        <div class="live-pulse-dot"></div>
+                        <span id="liveSimText">Live Mode: Active</span>
+                    </div>
+
+                    <!-- Dark/Light Theme Toggle -->
+                    <button class="btn-icon" id="themeToggleBtn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+                </div>
+
+            </div>
+        </header>
+
+
+        <!-- ==========================================================================
+             Hero Banner: Project Summary
+             ========================================================================== -->
+        <section class="hero-banner">
+            <div class="banner-content">
+                <h2>
+                    <i class="fa-solid fa-earth-asia" style="color: var(--accent-cyan);"></i>
+                    Environmental Air Quality &amp; Forecasting Intelligence
+                </h2>
+                <p>
+                    This dashboard monitors 8 key environmental parameters (PM2.5, PM10, CO, NO2, SO2, O3, Temperature, Humidity)
+                    and predicts future AQI using linear regression &amp; moving-average algorithms based on Indian Central Pollution Control Board (CPCB) standards.
+                </p>
+            </div>
+            <div class="banner-badges">
+                <span class="tech-badge"><i class="fa-brands fa-html5"></i> HTML5</span>
+                <span class="tech-badge"><i class="fa-brands fa-css3-alt"></i> Modern CSS</span>
+                <span class="tech-badge"><i class="fa-brands fa-js"></i> JavaScript</span>
+                <span class="tech-badge"><i class="fa-solid fa-chart-line"></i> Chart.js</span>
+                <span class="tech-badge"><i class="fa-brands fa-python"></i> Python ML</span>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================================
+             Dashboard Hero Grid (Current AQI Card + AQI Gauge Meter + Health Quick View)
+             ========================================================================== -->
+        <section class="dashboard-hero-grid">
+            
+            <!-- Card 1: Current AQI Hero Display -->
+            <div class="card aqi-hero-card">
+                <div class="card-header">
+                    <div class="location-meta">
+                        <span class="city-name" id="displayCityName">
+                            <i class="fa-solid fa-city" style="font-size: 1.1rem; color: var(--accent-cyan);"></i>
+                            Kakinada
+                        </span>
+                        <span class="city-state" id="displayCityState">Andhra Pradesh, India</span>
+                        <span class="station-info" id="displayStationInfo">Collectorate Ground Continuous Station</span>
+                    </div>
+                </div>
+
+                <div class="aqi-number-container">
+                    <div class="aqi-value-large" id="currentAqiValue">72</div>
+                    <div class="aqi-unit-label">Air Quality Index (AQI)</div>
+                    <div>
+                        <span class="category-badge-pill" id="currentAqiCategoryBadge">
+                            <i class="fa-solid fa-smile" id="categoryBadgeIcon"></i>
+                            <span id="currentAqiCategoryText">Satisfactory</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="aqi-hero-footer">
+                    <div>
+                        Dominant: <span class="dominant-pollutant-badge" id="dominantPollutantText">PM10</span>
+                    </div>
+                    <div>
+                        <i class="fa-regular fa-clock"></i> <span id="lastUpdatedTime">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Interactive Circular AQI Gauge Meter -->
+            <div class="card gauge-container-card">
+                <div class="card-header" style="width: 100%;">
+                    <div class="card-title">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        AQI Scale Visualizer (0–500)
+                    </div>
+                    <span class="tech-badge" style="font-size: 0.72rem;">CPCB Standard</span>
+                </div>
+
+                <!-- SVG Circular Gauge Meter -->
+                <div class="gauge-wrapper">
+                    <svg class="gauge-svg" viewBox="0 0 300 180">
+                        <!-- Definitions for Gradients -->
+                        <defs>
+                            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#10b981" />
+                                <stop offset="20%" stop-color="#84cc16" />
+                                <stop offset="40%" stop-color="#eab308" />
+                                <stop offset="60%" stop-color="#f97316" />
+                                <stop offset="80%" stop-color="#ef4444" />
+                                <stop offset="100%" stop-color="#a855f7" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Background Track -->
+                        <path d="M 30 140 A 120 120 0 0 1 270 140" class="gauge-bg-arc" />
+
+                        <!-- Segment Arc (Colored) -->
+                        <path d="M 30 140 A 120 120 0 0 1 270 140" stroke="url(#gaugeGradient)" class="gauge-colored-segment" />
+
+                        <!-- Needle Pointer -->
+                        <g id="gaugeNeedleGroup" class="gauge-needle" style="transform: rotate(-120deg);">
+                            <polygon points="146,140 154,140 150,30" fill="#f8fafc" />
+                            <circle cx="150" cy="140" r="10" class="gauge-center-cap" />
+                            <circle cx="150" cy="140" r="4" fill="var(--accent-cyan)" />
+                        </g>
+
+                        <!-- Tick Labels -->
+                        <text x="30" y="165" fill="#64748b" font-size="11" font-weight="700" text-anchor="middle">0</text>
+                        <text x="80" y="70" fill="#64748b" font-size="10" font-weight="700" text-anchor="middle">100</text>
+                        <text x="150" y="32" fill="#64748b" font-size="10" font-weight="700" text-anchor="middle">250</text>
+                        <text x="220" y="70" fill="#64748b" font-size="10" font-weight="700" text-anchor="middle">350</text>
+                        <text x="270" y="165" fill="#64748b" font-size="11" font-weight="700" text-anchor="middle">500</text>
+                    </svg>
+                </div>
+
+                <!-- AQI Category Color Legend Bar -->
+                <div class="aqi-legend-bar">
+                    <div class="legend-segment" style="background: var(--aqi-good);" title="Good (0-50)"></div>
+                    <div class="legend-segment" style="background: var(--aqi-satisfactory);" title="Satisfactory (51-100)"></div>
+                    <div class="legend-segment" style="background: var(--aqi-moderate);" title="Moderate (101-200)"></div>
+                    <div class="legend-segment" style="background: var(--aqi-poor);" title="Poor (201-300)"></div>
+                    <div class="legend-segment" style="background: var(--aqi-very-poor);" title="Very Poor (301-400)"></div>
+                    <div class="legend-segment" style="background: var(--aqi-severe);" title="Severe (401-500)"></div>
+                </div>
+
+                <div class="legend-labels">
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-good);"></div> Good (0–50)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-satisfactory);"></div> Satisfactory (51–100)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-moderate);"></div> Moderate (101–200)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-poor);"></div> Poor (201–300)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-very-poor);"></div> Very Poor (301–400)</div>
+                    <div class="legend-item"><div class="legend-dot" style="background: var(--aqi-severe);"></div> Severe (401–500)</div>
+                </div>
+            </div>
+
+            <!-- Card 3: Quick Health Summary -->
+            <div class="card health-quick-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        Health Impact Overview
+                    </div>
+                </div>
+
+                <div class="advisory-box">
+                    <div class="advisory-headline" id="quickAdvisoryHeadline">Air Quality is Satisfactory</div>
+                    <div class="advisory-text" id="quickAdvisoryText">
+                        Minor breathing discomfort may occur for unusually sensitive individuals upon prolonged outdoor exertion.
+                    </div>
+                </div>
+
+                <ul class="quick-guidelines-list" id="quickGuidelinesList">
+                    <li>
+                        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                        <span>Normal outdoor recreational activities are safe for healthy adults.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                        <span>Natural indoor window ventilation is recommended.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #eab308;"></i>
+                        <span>Asthmatic individuals should carry emergency inhalers during transit.</span>
+                    </li>
+                </ul>
+
+                <div style="margin-top: 1rem; text-align: right;">
+                    <a href="#healthSection" style="font-size: 0.82rem; font-weight: 600;">
+                        View Full Medical Advisory <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================================================
+             Air Quality Parameters (8 Environmental Cards)
+             ========================================================================== -->
+        <section class="parameters-section" id="parametersSection">
+            <div class="section-heading">
+                <div>
+                    <h3><i class="fa-solid fa-smog"></i> Air Quality Parameters &amp; Sub-Indices</h3>
+                    <p>Continuous monitoring of critical inhalable particulate matter, toxic gases, and ambient weather telemetry</p>
+                </div>
+                <div class="tech-badge">
+                    <i class="fa-solid fa-microchip"></i> 8 Active Sensors
+                </div>
+            </div>
+
+            <div class="parameters-grid">
+                
+                <!-- 1. PM2.5 -->
+                <div class="param-card" id="cardPM25">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>PM2.5</h4>
+                            <span class="param-sublabel">Fine Inhalable Particles</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-lungs"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valPM25">38.5</span>
+                        <span class="param-unit">µg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressPM25" style="width: 64%; background: var(--aqi-satisfactory);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 60 µg/m³</span>
+                        <span class="param-subindex" id="subPM25" style="color: var(--aqi-satisfactory); background: var(--current-aqi-bg);">Sub-Index: 64</span>
+                    </div>
+                </div>
+
+                <!-- 2. PM10 -->
+                <div class="param-card" id="cardPM10">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>PM10</h4>
+                            <span class="param-sublabel">Coarse Inhalable Dust</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-wind"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valPM10">65.2</span>
+                        <span class="param-unit">µg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressPM10" style="width: 65%; background: var(--aqi-satisfactory);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 100 µg/m³</span>
+                        <span class="param-subindex" id="subPM10" style="color: var(--aqi-satisfactory); background: var(--current-aqi-bg);">Sub-Index: 65</span>
+                    </div>
+                </div>
+
+                <!-- 3. CO -->
+                <div class="param-card" id="cardCO">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>CO</h4>
+                            <span class="param-sublabel">Carbon Monoxide</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-car-side"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valCO">0.65</span>
+                        <span class="param-unit">mg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressCO" style="width: 32%; background: var(--aqi-good);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 2.0 mg/m³</span>
+                        <span class="param-subindex" id="subCO" style="color: var(--aqi-good); background: rgba(16, 185, 129, 0.15);">Sub-Index: 32</span>
+                    </div>
+                </div>
+
+                <!-- 4. NO2 -->
+                <div class="param-card" id="cardNO2">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>NO2</h4>
+                            <span class="param-sublabel">Nitrogen Dioxide</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-industry"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valNO2">22.4</span>
+                        <span class="param-unit">µg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressNO2" style="width: 28%; background: var(--aqi-good);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 80 µg/m³</span>
+                        <span class="param-subindex" id="subNO2" style="color: var(--aqi-good); background: rgba(16, 185, 129, 0.15);">Sub-Index: 28</span>
+                    </div>
+                </div>
+
+                <!-- 5. SO2 -->
+                <div class="param-card" id="cardSO2">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>SO2</h4>
+                            <span class="param-sublabel">Sulphur Dioxide</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-fire-flame-simple"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valSO2">12.1</span>
+                        <span class="param-unit">µg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressSO2" style="width: 15%; background: var(--aqi-good);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 80 µg/m³</span>
+                        <span class="param-subindex" id="subSO2" style="color: var(--aqi-good); background: rgba(16, 185, 129, 0.15);">Sub-Index: 15</span>
+                    </div>
+                </div>
+
+                <!-- 6. O3 -->
+                <div class="param-card" id="cardO3">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>O3</h4>
+                            <span class="param-sublabel">Ground-Level Ozone</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-sun"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valO3">34.0</span>
+                        <span class="param-unit">µg/m³</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressO3" style="width: 34%; background: var(--aqi-good);"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Safe Limit: 100 µg/m³</span>
+                        <span class="param-subindex" id="subO3" style="color: var(--aqi-good); background: rgba(16, 185, 129, 0.15);">Sub-Index: 34</span>
+                    </div>
+                </div>
+
+                <!-- 7. Temperature -->
+                <div class="param-card" id="cardTemp">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>Temperature</h4>
+                            <span class="param-sublabel">Ambient Thermal Level</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-temperature-half"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valTemp">29.5</span>
+                        <span class="param-unit">°C</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressTemp" style="width: 59%; background: #38bdf8;"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Thermal Comfort: 22–32°C</span>
+                        <span class="param-subindex" style="color: #38bdf8; background: rgba(56, 189, 248, 0.15);">Normal</span>
+                    </div>
+                </div>
+
+                <!-- 8. Humidity -->
+                <div class="param-card" id="cardHumidity">
+                    <div class="param-header">
+                        <div class="param-info">
+                            <h4>Humidity</h4>
+                            <span class="param-sublabel">Relative Moisture Index</span>
+                        </div>
+                        <div class="param-icon-badge"><i class="fa-solid fa-droplet"></i></div>
+                    </div>
+                    <div class="param-value-box">
+                        <span class="param-value" id="valHumidity">78</span>
+                        <span class="param-unit">%</span>
+                    </div>
+                    <div class="param-progress-container">
+                        <div class="param-progress-bar">
+                            <div class="param-progress-fill" id="progressHumidity" style="width: 78%; background: #6366f1;"></div>
+                        </div>
+                    </div>
+                    <div class="param-footer">
+                        <span>Atmospheric Moisture</span>
+                        <span class="param-subindex" style="color: #6366f1; background: rgba(99, 102, 241, 0.15);">Moderate-High</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==========================================================================
+             Interactive Charts Section
+             ========================================================================== -->
+        <section class="charts-section" id="chartsSection">
+            <div class="section-heading">
+                <div>
+                    <h3><i class="fa-solid fa-chart-area"></i> Air Quality Visual Analytics &amp; Trends</h3>
+                    <p>Real-time temporal patterns, particulate matter comparisons, and pollutant distribution ratios</p>
+                </div>
+            </div>
+
+            <!-- Main Charts Grid (Trend Chart + Pollutant Comparison Chart) -->
+            <div class="charts-main-grid">
+                
+                <!-- Chart 1: AQI Trend Over Time -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-chart-line"></i>
+                            AQI Trend Over Time
+                        </div>
+                        <div class="chart-controls">
+                            <button class="chart-tab-btn active" id="btnTrend24h" onclick="switchTrendTimeframe('24h')">24 Hours</button>
+                            <button class="chart-tab-btn" id="btnTrend7d" onclick="switchTrendTimeframe('7d')">7 Days</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="aqiTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Major Pollutants Breakdown & Comparison -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Major Pollutants Comparison
+                        </div>
+                        <span class="tech-badge" style="font-size: 0.72rem;">Sub-Index Ratios</span>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="pollutantRadarChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sub Charts Grid (Particulate Matter PM2.5 vs PM10 Trend + Forecast Prediction Curve) -->
+            <div class="charts-sub-grid">
+                
+                <!-- Chart 3: PM2.5 & PM10 Particulate Matter Trend -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-smog"></i>
+                            PM2.5 vs PM10 Particulate Concentrations
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="particulateChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Gas Pollutants Distribution -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-bars-staggered"></i>
+                            Chemical Gas Levels (NO2, SO2, CO, O3)
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="gasPollutantChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==========================================================================
+             AQI Prediction Section (Machine Learning Forecasting & What-If Simulator)
+             ========================================================================== -->
+        <section class="prediction-section" id="predictionSection">
+            
+            <div class="prediction-header">
+                <div class="prediction-title-area">
+                    <h3>
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        AQI Prediction &amp; Future Forecasting
+                    </h3>
+                    <p class="prediction-subtitle">
+                        Predictive machine learning models estimating future air quality trends based on historical telemetry and multivariate regression.
+                    </p>
+                </div>
+                <div class="ml-model-pill">
+                    <i class="fa-solid fa-brain"></i>
+                    ML Model: Linear Regression &amp; Moving Average
+                </div>
+            </div>
+
+            <!-- Forecast Cards Row (Next 6h, 12h, 24h, 48h, 72h) -->
+            <div class="forecast-cards-row">
+                
+                <div class="forecast-card">
+                    <div class="forecast-time">+6 Hours</div>
+                    <div class="forecast-value" id="pred6hVal" style="color: var(--aqi-satisfactory);">76</div>
+                    <div class="forecast-badge" id="pred6hBadge" style="background: var(--aqi-satisfactory);">Satisfactory</div>
+                    <div class="forecast-confidence">Confidence: 94%</div>
+                </div>
+
+                <div class="forecast-card">
+                    <div class="forecast-time">+12 Hours</div>
+                    <div class="forecast-value" id="pred12hVal" style="color: var(--aqi-satisfactory);">82</div>
+                    <div class="forecast-badge" id="pred12hBadge" style="background: var(--aqi-satisfactory);">Satisfactory</div>
+                    <div class="forecast-confidence">Confidence: 91%</div>
+                </div>
+
+                <div class="forecast-card">
+                    <div class="forecast-time">+24 Hours (Tomorrow)</div>
+                    <div class="forecast-value" id="pred24hVal" style="color: var(--aqi-satisfactory);">69</div>
+                    <div class="forecast-badge" id="pred24hBadge" style="background: var(--aqi-satisfactory);">Satisfactory</div>
+                    <div class="forecast-confidence">Confidence: 88%</div>
+                </div>
+
+                <div class="forecast-card">
+                    <div class="forecast-time">+48 Hours (2 Days)</div>
+                    <div class="forecast-value" id="pred48hVal" style="color: var(--aqi-satisfactory);">64</div>
+                    <div class="forecast-badge" id="pred48hBadge" style="background: var(--aqi-satisfactory);">Satisfactory</div>
+                    <div class="forecast-confidence">Confidence: 82%</div>
+                </div>
+
+                <div class="forecast-card">
+                    <div class="forecast-time">+72 Hours (3 Days)</div>
+                    <div class="forecast-value" id="pred72hVal" style="color: var(--aqi-good);">58</div>
+                    <div class="forecast-badge" id="pred72hBadge" style="background: var(--aqi-good);">Satisfactory</div>
+                    <div class="forecast-confidence">Confidence: 78%</div>
+                </div>
+
+            </div>
+
+            <!-- Prediction Split Layout: Forecast Chart + Interactive What-If ML Simulator -->
+            <div class="prediction-split-layout">
+                
+                <!-- Left: Forecast Trend Curve Chart -->
+                <div class="card chart-card" style="min-height: 380px;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                            Predicted AQI Trajectory Curve
+                        </div>
+                        <span class="tech-badge" id="predConfidenceBadge">High Confidence</span>
+                    </div>
+                    <div class="chart-canvas-wrapper">
+                        <canvas id="predictionTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive What-If ML Prediction Simulator -->
+                <div class="simulator-card">
+                    <div class="simulator-header">
+                        <h4>
+                            <i class="fa-solid fa-sliders" style="color: var(--accent-cyan);"></i>
+                            Interactive AQI What-If Calculator
+                        </h4>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Adjust Sliders</span>
+                    </div>
+
+                    <div class="sim-slider-group">
+                        
+                        <!-- PM2.5 Slider -->
+                        <div class="sim-item">
+                            <div class="sim-label-row">
+                                <span>PM2.5 (Fine Dust)</span>
+                                <span class="sim-val-display"><span id="simPM25Val">40</span> µg/m³</span>
+                            </div>
+                            <input type="range" id="simPM25" class="sim-slider" min="5" max="300" value="40" oninput="runInteractivePrediction()">
+                        </div>
+
+                        <!-- PM10 Slider -->
+                        <div class="sim-item">
+                            <div class="sim-label-row">
+                                <span>PM10 (Coarse Dust)</span>
+                                <span class="sim-val-display"><span id="simPM10Val">70</span> µg/m³</span>
+                            </div>
+                            <input type="range" id="simPM10" class="sim-slider" min="10" max="450" value="70" oninput="runInteractivePrediction()">
+                        </div>
+
+                        <!-- NO2 Slider -->
+                        <div class="sim-item">
+                            <div class="sim-label-row">
+                                <span>NO2 (Nitrogen Dioxide)</span>
+                                <span class="sim-val-display"><span id="simNO2Val">25</span> µg/m³</span>
+                            </div>
+                            <input type="range" id="simNO2" class="sim-slider" min="5" max="150" value="25" oninput="runInteractivePrediction()">
+                        </div>
+
+                        <!-- CO Slider -->
+                        <div class="sim-item">
+                            <div class="sim-label-row">
+                                <span>CO (Carbon Monoxide)</span>
+                                <span class="sim-val-display"><span id="simCOVal">0.8</span> mg/m³</span>
+                            </div>
+                            <input type="range" id="simCO" class="sim-slider" min="0.1" max="5.0" step="0.1" value="0.8" oninput="runInteractivePrediction()">
+                        </div>
+
+                    </div>
+
+                    <!-- Simulator Prediction Result Box -->
+                    <div class="sim-result-box">
+                        <div class="sim-result-title">Predicted AQI Output</div>
+                        <div class="sim-result-value" id="simResultAQI">76</div>
+                        <div>
+                            <span class="category-badge-pill" id="simResultBadge" style="font-size: 0.85rem; padding: 0.25rem 1rem;">
+                                Satisfactory
+                            </span>
+                        </div>
+                        <div class="sim-dominant-info">
+                            Dominant Parameter: <strong id="simDominantText">PM10 (Sub-Index 70)</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Scientific & Academic Disclaimer Banner -->
+            <div class="prediction-disclaimer">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Disclaimer &amp; Academic Notice:</strong>
+                    This AQI prediction is generated using beginner-friendly multivariate statistical regression &amp; historical moving-average models on sample data.
+                    It is designed for academic demonstration and mini-project presentation purposes and is not medically or scientifically guaranteed.
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================================================
+             Health Recommendations Section
+             ========================================================================== -->
+        <section class="health-section" id="healthSection">
+            <div class="section-heading">
+                <div>
+                    <h3><i class="fa-solid fa-notes-medical"></i> Health Recommendations &amp; Public Advisories</h3>
+                    <p>Actionable precautions tailored to the current AQI category to protect sensitive groups and the general public</p>
+                </div>
+            </div>
+
+            <!-- Dynamic Category Alert Banner -->
+            <div class="health-banner-alert" id="healthBannerAlert">
+                <div class="alert-left">
+                    <div class="alert-icon-circle" id="healthAlertIconCircle">
+                        <i class="fa-solid fa-shield-heart"></i>
+                    </div>
+                    <div class="alert-text-body">
+                        <h4 id="healthAlertTitle">Category: Satisfactory Air Quality</h4>
+                        <p id="healthAlertDesc">Air quality is acceptable; however, some pollutants may pose a moderate health concern for a very small number of individuals with unusual sensitivities.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 Detailed Health Action Cards -->
+            <div class="health-advisories-grid">
+                
+                <!-- Action 1: Outdoor Exercise -->
+                <div class="adv-card">
+                    <div>
+                        <div class="adv-top">
+                            <div class="adv-icon"><i class="fa-solid fa-person-running"></i></div>
+                            <h5>Outdoor Activities &amp; Jogging</h5>
+                        </div>
+                        <div class="adv-desc" id="advExerciseDesc">
+                            Ideal for jogging, cycling, and outdoor workouts. No time restrictions necessary.
+                        </div>
+                    </div>
+                    <span class="adv-status-tag" id="advExerciseTag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                        Safe for All
+                    </span>
+                </div>
+
+                <!-- Action 2: Sensitive Groups -->
+                <div class="adv-card">
+                    <div>
+                        <div class="adv-top">
+                            <div class="adv-icon"><i class="fa-solid fa-children"></i></div>
+                            <h5>Children, Elderly &amp; Asthmatics</h5>
+                        </div>
+                        <div class="adv-desc" id="advSensitiveDesc">
+                            Unusually sensitive individuals should monitor any minor breathing discomfort or wheezing.
+                        </div>
+                    </div>
+                    <span class="adv-status-tag" id="advSensitiveTag" style="background: rgba(132, 204, 22, 0.15); color: #84cc16;">
+                        Normal Precautions
+                    </span>
+                </div>
+
+                <!-- Action 3: Mask Guidance -->
+                <div class="adv-card">
+                    <div>
+                        <div class="adv-top">
+                            <div class="adv-icon"><i class="fa-solid fa-mask-face"></i></div>
+                            <h5>Mask Wearing Guidance</h5>
+                        </div>
+                        <div class="adv-desc" id="advMaskDesc">
+                            Face masks are not required for the general public under current ambient conditions.
+                        </div>
+                    </div>
+                    <span class="adv-status-tag" id="advMaskTag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                        Not Required
+                    </span>
+                </div>
+
+                <!-- Action 4: Indoor Ventilation -->
+                <div class="adv-card">
+                    <div>
+                        <div class="adv-top">
+                            <div class="adv-icon"><i class="fa-solid fa-door-open"></i></div>
+                            <h5>Room Windows &amp; Ventilation</h5>
+                        </div>
+                        <div class="adv-desc" id="advVentilationDesc">
+                            Safe to keep windows open for natural cross-ventilation and fresh ambient air intake.
+                        </div>
+                    </div>
+                    <span class="adv-status-tag" id="advVentilationTag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                        Open Windows
+                    </span>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==========================================================================
+             Historical Data Table Section
+             ========================================================================== -->
+        <section class="table-section" id="tableSection">
+            <div class="section-heading">
+                <div>
+                    <h3><i class="fa-solid fa-table-list"></i> Air Quality Historical Log &amp; Telemetry Data</h3>
+                    <p>Comprehensive historical records across monitoring stations with search and CSV export capabilities</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <!-- Search & Actions Bar -->
+                <div class="table-controls-bar">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+                        <input type="text" id="tableSearchInput" placeholder="Search by city, date, or category..." oninput="handleTableSearch()">
+                    </div>
+
+                    <div class="table-actions">
+                        <button class="btn-primary" onclick="exportTableToCSV()">
+                            <i class="fa-solid fa-file-arrow-down"></i> Export to CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Responsive Table Wrapper -->
+                <div class="table-responsive-wrapper">
+                    <table class="data-table" id="airQualityDataTable">
+                        <thead>
+                            <tr>
+                                <th>Date / Time</th>
+                                <th>Location</th>
+                                <th>AQI</th>
+                                <th>PM2.5 (µg/m³)</th>
+                                <th>PM10 (µg/m³)</th>
+                                <th>CO (mg/m³)</th>
+                                <th>NO2 (µg/m³)</th>
+                                <th>O3 (µg/m³)</th>
+                                <th>Category</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <!-- Populated dynamically by script.js -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Pagination Footer -->
+                <div class="table-pagination">
+                    <div>
+                        Showing <span id="tableShowingCount">10</span> of <span id="tableTotalCount">40</span> records
+                    </div>
+                    <div class="pagination-buttons">
+                        <button class="btn-page" id="btnPrevPage" onclick="changeTablePage(-1)"><i class="fa-solid fa-chevron-left"></i> Previous</button>
+                        <span id="currentPageIndicator" style="padding: 0.3rem 0.6rem; font-weight: 700;">Page 1</span>
+                        <button class="btn-page" id="btnNextPage" onclick="changeTablePage(1)">Next <i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==========================================================================
+             Footer Section
+             ========================================================================== -->
+        <footer class="site-footer">
+            <div class="footer-grid">
+                
+                <div class="footer-col">
+                    <h4>Air Quality Index Monitoring &amp; Prediction Dashboard</h4>
+                    <p>
+                        A beginner-friendly environmental telemetry and machine learning web application designed for B.Tech engineering project demonstrations.
+                        Built with HTML, CSS, JavaScript, and Python.
+                    </p>
+                    <div style="margin-top: 1rem; color: var(--text-subtle); font-size: 0.8rem;">
+                        <i class="fa-solid fa-book-open"></i> Reference: CPCB National Air Quality Index (NAQI) Technical Guidelines.
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Monitored Cities</h4>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Kakinada')">Kakinada (AP)</a></li>
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Hyderabad')">Hyderabad (TS)</a></li>
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Vijayawada')">Vijayawada (AP)</a></li>
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Visakhapatnam')">Visakhapatnam (AP)</a></li>
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Chennai')">Chennai (TN)</a></li>
+                        <li><a href="javascript:void(0)" onclick="selectCityFromFooter('Bengaluru')">Bengaluru (KA)</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Quick Navigation</h4>
+                    <ul class="footer-links">
+                        <li><a href="#parametersSection">Pollutant Parameters</a></li>
+                        <li><a href="#chartsSection">Visual Analytics &amp; Charts</a></li>
+                        <li><a href="#predictionSection">AQI Prediction Studio</a></li>
+                        <li><a href="#healthSection">Health Recommendations</a></li>
+                        <li><a href="#tableSection">Historical Records</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                &copy; 2026 Air Quality Index Monitoring &amp; Prediction Dashboard &bull; Ready for College Mini-Project Demonstration
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Scripts (Flat Folder: Same Directory) -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
